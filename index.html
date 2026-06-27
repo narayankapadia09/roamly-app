@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Roamly — 3D Walkthrough</title>
+    <script type="module" crossorigin src="/Program Files/Git/roamly-app/assets/index-qGy5AOc4.js"></script>
+    <link rel="stylesheet" crossorigin href="/Program Files/Git/roamly-app/assets/index-CUqht4jT.css">
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+
+      <!-- Intro overlay -->
+      <div id="overlay" class="overlay">
+        <div class="overlay-card">
+          <div class="brand">Roamly</div>
+          <p class="tagline">Create and share photoreal 3D walkthroughs — right in the browser.</p>
+          <div class="overlay-actions">
+            <button id="enter-btn" class="enter-btn">Start walkthrough</button>
+            <button id="open-btn" class="enter-btn ghost">Load your model</button>
+          </div>
+          <ul class="controls-hint">
+            <li><kbd>Drag</kbd> look</li>
+            <li><kbd>Click</kbd> floor to move</li>
+            <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk</li>
+          </ul>
+          <label class="drop-hint">Drop a <strong>.glb .gltf .obj .stl .fbx</strong> model — select the model <em>and</em> its textures/<strong>.zip</strong> together</label>
+          <input id="open-file" type="file" accept=".glb,.gltf,.obj,.stl,.fbx,.zip,image/*" multiple hidden />
+        </div>
+      </div>
+
+      <!-- Persistent UI while exploring -->
+      <div id="ui" class="ui hidden">
+        <div class="brand-chip" id="brand-chip">Roamly</div>
+
+        <!-- Tool cluster (top-right) -->
+        <div class="toolbar">
+          <button id="tool-edit" class="icon-btn" title="Editor">✎</button>
+          <button id="tool-play" class="icon-btn" title="Play guided tour">▶</button>
+          <button id="tool-map" class="icon-btn" title="Minimap">🗺</button>
+          <button id="tool-measure" class="icon-btn" title="Measure">📏</button>
+          <button id="tool-rotate" class="icon-btn" title="Auto-rotate">⟳</button>
+          <button id="tool-shot" class="icon-btn" title="Screenshot">📷</button>
+          <button id="tool-full" class="icon-btn" title="Fullscreen">⛶</button>
+          <span id="vr-slot" class="vr-slot"></span>
+          <button id="tool-help" class="icon-btn" title="Controls">?</button>
+        </div>
+
+        <div id="help-panel" class="panel help-panel hidden">
+          <strong>Navigation</strong>
+          <p><kbd>Drag</kbd> to look · <kbd>Click/Tap</kbd> the floor to glide</p>
+          <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk · <kbd>Shift</kbd> run · <kbd>Space</kbd> jump</p>
+          <p>Click a <strong>ⓘ</strong> hotspot to read it. Use the bar below to jump views.</p>
+        </div>
+
+        <!-- Editor panel (left) -->
+        <div id="editor" class="panel editor hidden">
+          <div class="editor-head">
+            <strong>Editor</strong>
+            <span class="badge">beta</span>
+          </div>
+
+          <label class="field">
+            <span>Tour title</span>
+            <input id="ed-title" type="text" placeholder="My walkthrough" />
+          </label>
+
+          <div class="row">
+            <button id="ed-add-view" class="btn">＋ Viewpoint (here)</button>
+            <button id="ed-add-hotspot" class="btn">＋ Hotspot</button>
+          </div>
+
+          <div class="subhead">Viewpoints</div>
+          <ul id="ed-views" class="list"></ul>
+
+          <div class="subhead">Configurator</div>
+          <button id="ed-add-config" class="btn">＋ Configurable surface</button>
+          <div id="ed-config" class="config-list"></div>
+
+          <div class="subhead">Lighting</div>
+          <div id="ed-presets" class="presets">
+            <button class="preset-btn active" data-preset="day">Day</button>
+            <button class="preset-btn" data-preset="sunset">Sunset</button>
+            <button class="preset-btn" data-preset="night">Night</button>
+            <button class="preset-btn" data-preset="studio">Studio</button>
+          </div>
+          <label class="field">
+            <span>Sun intensity <em id="ed-sun-val">2.2</em></span>
+            <input id="ed-sun" type="range" min="0" max="5" step="0.1" value="2.2" />
+          </label>
+          <label class="field">
+            <span>Exposure <em id="ed-exp-val">1.0</em></span>
+            <input id="ed-exp" type="range" min="0.2" max="2" step="0.05" value="1.0" />
+          </label>
+
+          <div class="subhead">Look &amp; feel</div>
+          <label class="field">
+            <span>Field of view <em id="ed-fov-val">70</em></span>
+            <input id="ed-fov" type="range" min="50" max="100" step="1" value="70" />
+          </label>
+          <label class="field">
+            <span>Walk speed <em id="ed-speed-val">3.2</em></span>
+            <input id="ed-speed" type="range" min="1" max="8" step="0.1" value="3.2" />
+          </label>
+          <label class="field">
+            <span>Look sensitivity <em id="ed-sens-val">1.0</em></span>
+            <input id="ed-sens" type="range" min="0.3" max="2.5" step="0.1" value="1.0" />
+          </label>
+
+          <div class="subhead">Project</div>
+          <button id="ed-load-model" class="btn">Load 3D model…</button>
+          <div class="row" style="margin-top: 8px">
+            <button id="ed-save" class="btn primary">Save</button>
+            <button id="ed-export" class="btn">Export</button>
+            <button id="ed-import" class="btn">Import</button>
+          </div>
+          <input id="ed-file" type="file" accept=".json,application/json" hidden />
+          <p id="ed-status" class="ed-status"></p>
+        </div>
+
+        <!-- Hotspot info popup (viewer) -->
+        <div id="hotspot-info" class="panel hotspot-info hidden">
+          <button class="close" id="hi-close">×</button>
+          <img id="hi-image" class="hi-image hidden" alt="" />
+          <h3 id="hi-title"></h3>
+          <p id="hi-body"></p>
+          <a id="hi-link" class="hi-link hidden" target="_blank" rel="noopener">Learn more →</a>
+        </div>
+
+        <!-- Hotspot edit form (editor) -->
+        <div id="hotspot-form" class="panel hotspot-form hidden">
+          <strong>Edit hotspot</strong>
+          <label class="field"><span>Title</span><input id="hf-title" type="text" /></label>
+          <label class="field"><span>Description</span><textarea id="hf-body" rows="3"></textarea></label>
+          <label class="field"><span>Image URL (optional)</span><input id="hf-image" type="text" placeholder="https://…" /></label>
+          <label class="field"><span>Link URL (optional)</span><input id="hf-link" type="text" placeholder="https://…" /></label>
+          <div class="row">
+            <button id="hf-save" class="btn primary">Save</button>
+            <button id="hf-delete" class="btn danger">Delete</button>
+          </div>
+        </div>
+
+        <!-- Visitor finishes bar (configurator) -->
+        <div id="finishes-bar" class="finishes-bar hidden"></div>
+
+        <!-- Curated views bar (bottom) -->
+        <div id="views-bar" class="views-bar"></div>
+
+        <!-- Mode hint -->
+        <div id="mode-hint" class="mode-hint hidden"></div>
+
+        <div id="status" class="status"></div>
+      </div>
+
+      <!-- Minimap -->
+      <canvas id="minimap" class="minimap hidden" width="220" height="220"></canvas>
+
+      <!-- Floating measurement label -->
+      <div id="measure-label" class="measure-label hidden"></div>
+
+      <div id="loading" class="loading hidden">
+        <span id="loading-text">Loading model…</span>
+        <div class="loading-track"><div id="loading-bar" class="loading-bar"></div></div>
+      </div>
+    </div>
+
+  </body>
+</html>
