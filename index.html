@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Roamly — 3D Walkthrough</title>
-    <script type="module" crossorigin src="/roamly-app/assets/index-qGy5AOc4.js"></script>
+    <script type="module" crossorigin src="/roamly-app/assets/index-D9P1WQmW.js"></script>
     <link rel="stylesheet" crossorigin href="/roamly-app/assets/index-CUqht4jT.css">
   </head>
   <body>
@@ -107,6 +107,14 @@
             <span>Look sensitivity <em id="ed-sens-val">1.0</em></span>
             <input id="ed-sens" type="range" min="0.3" max="2.5" step="0.1" value="1.0" />
           </label>
+          <div class="field">
+            <span>Quality (performance)</span>
+            <div id="ed-quality" class="presets quality">
+              <button class="preset-btn active" data-quality="high">High</button>
+              <button class="preset-btn" data-quality="balanced">Balanced</button>
+              <button class="preset-btn" data-quality="performance">Fast</button>
+            </div>
+          </div>
 
           <div class="subhead">Project</div>
           <button id="ed-load-model" class="btn">Load 3D model…</button>
